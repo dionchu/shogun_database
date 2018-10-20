@@ -1,14 +1,16 @@
+import os.path
 import numpy as np
 import pandas as pd
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
 from shogun_database.future_root_factory import FutureRootFactory
 
+#run through loop to get data for all, keeping in mind 5 year limit to history
+
 columns =[
         'exchange_symbol',
         'root_symbol',
         'instrument_name',
-        'instrument_country_id',
         'underlying_name',
         'underlying_asset_class_id',
         'settle_start',
@@ -19,7 +21,7 @@ columns =[
         'final_settle_end',
         'final_settle_method',
         'final_settle_timezone',
-        'last_trade_time'
+        'last_trade_time',
         'quote_currency_id',
         'multiplier',
         'tick_size',
@@ -29,16 +31,16 @@ columns =[
         'last_trade',
         'first_position',
         'last_position',
-        'first_notice_date',
-        'last_notice_date',
-        'first_delivery_date',
-        'last_delivery_date',
+        'first_notice',
+        'last_notice',
+        'first_delivery',
+        'last_delivery',
         'settlement_date',
         'volume_switch_date',
         'open_interest_switch_date',
         'auto_close_date',
         'parent_calendar_id',
-        'child_calendar_id'
+        'child_calendar_id',
         'average_pricing',
         'deliverable',
         'delivery_month',
@@ -55,16 +57,11 @@ def write_future(factory,root_symbol):
         root_chain_df = factory.make_root_chain(root_symbol)
         root_info_dict = factory.retrieve_root_info(root_symbol)
 
-        # Combine futures instrument information and calculated dates
-        root_info_and_chain = pd.concat([pd.DataFrame.from_dict(root_info_dict),root_chain_df],axis=1).fillna(method='ffill')
-
-        # inner join with future_instrument_df to enforce column structure
-        df_insert = pd.concat([future_instrument_df,root_info_and_chain], join = "inner")
-
-        # Extract platform ticker symbols
+        # Convert pandas to dict for ease of extraction and indexing
         root_chain_dict = root_chain_df.set_index('platform_symbol').to_dict()
         platform_symbol_list = list(root_chain_dict['exchange_symbol'].keys())
 
+        # Loop through symbols and save in data frame
         data_df = pd.DataFrame()
         for platform_symbol in platform_symbol_list:
             print(platform_symbol)
@@ -78,8 +75,40 @@ def write_future(factory,root_symbol):
             tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True)
             data_df = data_df.append(tmp)
 
+        # Change default column names to lower case
         data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
-        data_df.to_csv('./shogun_database/_InstrumentData.csv')
+        # Insert Date column
+        data_df.insert(0,'date',data_df.index)
+
+        # If exists, append data, otherwise write new
+        if os.path.isfile(cwd + '\shogun_database\_InstrumentData.csv'):
+            with open('./shogun_database/InstrumentData.csv', 'a') as f:
+                     data_df.to_csv(f, header=False)
+        else:
+            data_df.to_csv('./shogun_database/InstrumentData.csv')
+
+
+        # Combine futures instrument information and calculated dates
+        root_info_and_chain = pd.concat([pd.DataFrame.from_dict(root_info_dict),root_chain_df],axis=1).fillna(method='ffill')
+
+        # Calculate start and end dates
+        start_end_df = pd.DataFrame(
+            {'start_date': data_df.groupby(['exchange_symbol']).first()['date'],
+            'end_date': data_df.groupby(['exchange_symbol']).last()['date']
+            })
+
+        # inner join with future_instrument_df to enforce column structure, merge start and end
+        metadata_df = pd.concat([future_instrument_df,root_info_and_chain], join = "inner")
+        metadata_df = pd.merge(metadata_df,start_end_df, on='exchange_symbol')
+        metadata_df = pd.concat([future_instrument_df,metadata_df], sort=False)
+
+        # If exists, append data, otherwise write new
+        if os.path.isfile(cwd + '\shogun_database\_FutureInstrument.csv'):
+            with open('./shogun_database/_FutureInstrument.csv', 'a') as f:
+                     metadata_df.to_csv(f, header=False)
+        else:
+            metadata_df.to_csv('./shogun_database/_FutureInstrument.csv')
+
         return data_df
         #run through loop to get data for all, keeping in mind 5 year limit to history
         #write or append to csv
