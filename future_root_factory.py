@@ -1,4 +1,11 @@
 import warnings
+
+import sys
+import os
+cwd = os.getcwd()
+sys.path.append(cwd + '\custom_calendar')
+sys.path.append(cwd)
+
 import trading_calendars
 from pandas.tseries.offsets import *
 import pandas as pd
@@ -81,7 +88,7 @@ class FutureRootFactory(object):
         if 'M' in list(root_contract_df['reference_month_offset_interval']):
             date_list = pd.date_range(start, end, freq='M')
         else:
-            date_list = pd.date_range(start, end, freq='M')
+            date_list = pd.date_range(start, end, freq='Q')
 
         merge = pd.concat([date_list.month.to_series(index = date_list),date_list.year.to_series(index = date_list)], axis =1)
         merge.columns = ['month','year']
