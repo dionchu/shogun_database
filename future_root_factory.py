@@ -34,15 +34,15 @@ class FutureRootFactory(object):
     """
     ## what happens if there are duplicate roots?
     def __init__(self):
-        self._country_code = pd.read_csv(".\shogun_database\CountryCode.csv", keep_default_na=False)
-        self._asset_class = pd.read_csv(".\shogun_database\AssetClass.csv")
-        self._currency_code = pd.read_csv(".\shogun_database\CurrencyCode.csv")
-        self._exchange_code = pd.read_csv(".\shogun_database\ExchangeCode.csv")
-        self._financial_center = pd.read_csv(".\shogun_database\FinancialCenter.csv")
-        self._future_contract_listing = pd.read_csv(".\shogun_database\FutureRootContractListingTable.csv")
-        self._future_root = pd.read_csv(".\shogun_database\FutureRootTable.csv")
-        self._platform_symbol_mapping = pd.read_csv(".\shogun_database\PlatformSymbolMapping.csv")
-        self._future_calendar_rules = pd.read_csv(".\shogun_database\FutureRootContractCalendarRules.csv")
+        self._country_code = pd.read_csv(".\shogun_database\_CountryCode.csv", keep_default_na=False)
+        self._asset_class = pd.read_csv(".\shogun_database\_AssetClass.csv")
+        self._currency_code = pd.read_csv(".\shogun_database\_CurrencyCode.csv")
+        self._exchange_code = pd.read_csv(".\shogun_database\_ExchangeCode.csv")
+        self._financial_center = pd.read_csv(".\shogun_database\_FinancialCenter.csv")
+        self._future_contract_listing = pd.read_csv(".\shogun_database\_FutureRootContractListingTable.csv")
+        self._future_root = pd.read_csv(".\shogun_database\_FutureRootTable.csv")
+        self._platform_symbol_mapping = pd.read_csv(".\shogun_database\_PlatformSymbolMapping.csv")
+        self._future_calendar_rules = pd.read_csv(".\shogun_database\_FutureRootContractCalendarRules.csv")
 
         self._root_cache = {}
 

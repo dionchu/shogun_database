@@ -79,7 +79,7 @@ def write_future(factory,root_symbol):
             data_df = data_df.append(tmp)
 
         data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
-        data_df.to_csv('./shogun_database/InstrumentData.csv')
+        data_df.to_csv('./shogun_database/_InstrumentData.csv')
         return data_df
         #run through loop to get data for all, keeping in mind 5 year limit to history
         #write or append to csv
