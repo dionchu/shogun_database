@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
-from shogun_database.future_root_factory import FutureRootFactory
+from .future_root_factory import FutureRootFactory
+
+import os
+dirname = os.path.dirname(__file__)
 
 #run through loop to get data for all, keeping in mind 5 year limit to history
 
@@ -81,11 +84,11 @@ def write_future(factory,root_symbol):
         data_df.insert(0,'date',data_df.index)
 
         # If exists, append data, otherwise write new
-        if os.path.isfile(cwd + '\shogun_database\_InstrumentData.csv'):
-            with open('./shogun_database/InstrumentData.csv', 'a') as f:
+        if os.path.isfile(dirname + "\_InstrumentData.csv"):
+            with open(dirname + "\_InstrumentData.csv", 'a') as f:
                      data_df.to_csv(f, header=False)
         else:
-            data_df.to_csv('./shogun_database/InstrumentData.csv')
+            data_df.to_csv(dirname + "\_InstrumentData.csv")
 
 
         # Combine futures instrument information and calculated dates
@@ -103,11 +106,11 @@ def write_future(factory,root_symbol):
         metadata_df = pd.concat([future_instrument_df,metadata_df], sort=False)
 
         # If exists, append data, otherwise write new
-        if os.path.isfile(cwd + '\shogun_database\_FutureInstrument.csv'):
-            with open('./shogun_database/_FutureInstrument.csv', 'a') as f:
+        if os.path.isfile(dirname + "\_FutureInstrument.csv"):
+            with open(dirname + "\_FutureInstrument.csv", 'a') as f:
                      metadata_df.to_csv(f, header=False)
         else:
-            metadata_df.to_csv('./shogun_database/_FutureInstrument.csv')
+            metadata_df.to_csv(dirname + "\_FutureInstrument.csv")
 
         return data_df
         #run through loop to get data for all, keeping in mind 5 year limit to history

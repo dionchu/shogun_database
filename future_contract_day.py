@@ -1,6 +1,7 @@
 import pandas as pd
 import warnings
 from pandas.errors import PerformanceWarning
+
 class FutureContractDay(object):
     """
     Class that defines a future contract day
