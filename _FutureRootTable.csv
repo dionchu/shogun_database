@@ -71,4 +71,4 @@ I,3 Month EURIBOR Interest Rate,3 Month EURIBOR Interest Rate,ICE,IFEU,,2,EU,EUR
 S,3 Month Euro Swiss Interest Rate,3 Month Euro Swiss Interest Rate,ICE,IFEU,,2,CH,CHF,2500,0.01,,16:00,16:15,vwap,exch,0,Swiss Franc ICE LIBOR,11:00,11:00,exch,11:00,
 L,3 Month Sterling Interest Rate ,3 Month Sterling Interest Rate ,ICE,IFEU,,2,GB,GBP,1250,0.01,,16:09,16:24,vwap,exch,0,ICE LIBOR,11:00,11:00,exch,11:00,
 GE,Globex Eurodollar,3 Month Eurodollar Interest Rate,CME,XCME,,2,US,USD,2500,0.0025,,13:59,14:00,vwap,exch,0,IBA LIBOR FIXING,11:00,11:00,London,11:00,
-BAX,3 Month Canadian Banker's Acceptance Futures,3 Month Canadian Banker's Acceptance,MX,ASX,IRD,2,CA,CAD,2500,0.005,,14:57,15:00,vwap,exch,0,3mo CDOR,10:15,10:15,exch,10:15,
+BAX,3 Month Canadian Banker's Acceptance Futures,3 Month Canadian Banker's Acceptance,MX,XMOD,IRD,2,CA,CAD,2500,0.005,,14:57,15:00,vwap,exch,0,3mo CDOR,10:15,10:15,exch,10:15,

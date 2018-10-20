@@ -56,7 +56,7 @@ class FutureContractDay(object):
         dates: datetimeindex
         """
 
-        contract_dates = pd.to_datetime(self.reference_dates.to_series().apply(lambda dt: dt.replace(day=1)).values)
+        contract_dates = pd.to_datetime(self.reference_dates.to_series().apply(lambda dt: dt.replace(day=self.day)).values)
 
         if self.offset is not None:
             if not isinstance(self.offset, list):
@@ -72,6 +72,6 @@ class FutureContractDay(object):
                     contract_dates += offset
 
         if self.observance is not None:
-            contract_dates = dates.map(lambda d: self.observance(d))
+            contract_dates = contract_dates.map(lambda d: self.observance(d))
 
         return contract_dates

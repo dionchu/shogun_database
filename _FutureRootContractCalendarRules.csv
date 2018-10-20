@@ -92,4 +92,10 @@ SP,first_trade,offset,DateOffset(weekday=FR(3))
 SP,last_trade,offset,DateOffset(weekday=FR(3))
 SP,settlement_date,offset,DateOffset(weekday=FR(3))
 YT,last_trade,day,15
-,last_trade,observance,previous_exchange_day
+YT,last_trade,observance,previous_exchange_day
+YT,settlement_date,day,15
+YT,settlement_date,offset,EDay(1)
+XT,last_trade,day,15
+XT,last_trade,observance,previous_exchange_day
+XT,settlement_date,day,15
+XT,settlement_date,offset,EDay(1)

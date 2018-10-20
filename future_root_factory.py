@@ -16,8 +16,8 @@ start_default = pd.Timestamp('1990-01-01', tz='UTC')
 end_base = pd.Timestamp('today', tz='UTC')
 end_default = end_base + pd.Timedelta(days=31)
 platform_default = 'RIC'
-print(cwd)
 from shogun_database.future_contract_day import FutureContractDay
+
 
 class FutureRootFactory(object):
     """A future root factory is an object that creates specific futures
@@ -44,15 +44,15 @@ class FutureRootFactory(object):
 #        self._future_root = pd.read_csv(".\shogun_database\_FutureRootTable.csv")
 #        self._platform_symbol_mapping = pd.read_csv(".\shogun_database\_PlatformSymbolMapping.csv")
 #        self._future_calendar_rules = pd.read_csv(".\shogun_database\_FutureRootContractCalendarRules.csv")
-        self._country_code = pd.read_csv("_CountryCode.csv", keep_default_na=False)
-        self._asset_class = pd.read_csv(".\_AssetClass.csv")
-        self._currency_code = pd.read_csv(".\_CurrencyCode.csv")
-        self._exchange_code = pd.read_csv(".\_ExchangeCode.csv")
-        self._financial_center = pd.read_csv(".\_FinancialCenter.csv")
-        self._future_contract_listing = pd.read_csv(".\_FutureRootContractListingTable.csv")
-        self._future_root = pd.read_csv(".\_FutureRootTable.csv")
-        self._platform_symbol_mapping = pd.read_csv(".\_PlatformSymbolMapping.csv")
-        self._future_calendar_rules = pd.read_csv(".\_FutureRootContractCalendarRules.csv")
+        self._country_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_CountryCode.csv", keep_default_na=False)
+        self._asset_class = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_AssetClass.csv")
+        self._currency_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_CurrencyCode.csv")
+        self._exchange_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_ExchangeCode.csv")
+        self._financial_center = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FinancialCenter.csv")
+        self._future_contract_listing = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootContractListingTable.csv")
+        self._future_root = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootTable.csv")
+        self._platform_symbol_mapping = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_PlatformSymbolMapping.csv")
+        self._future_calendar_rules = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootContractCalendarRules.csv")
 
         self._root_cache = {}
 
@@ -140,15 +140,17 @@ class FutureRootFactory(object):
             """
             If day falls on non-exchange day, use previous exchange instead;
             """
-            if not bool(len(pd.bdate_range(dt, dt, holidays=self.exchange_holidays))):
+            if dt.weekday() == 5 or dt.weekday() == 6 or dt in exchange_holidays:
                 return dt + EDay(-1)
+            return dt
 
         def next_exchange_day(dt):
             """
             If day falls on non-exchange day, use previous exchange instead;
             """
-            if not bool(len(pd.bdate_range(dt, dt, holidays=self.exchange_holidays))):
+            if dt.weekday() == 5 or dt.weekday() == 6 or dt in exchange_holidays:
                 return dt + EDay(1)
+            return dt
 
         # Obtain relevant contract rules, calculate dates and create pandas dataframe
         contract_rules = self._future_calendar_rules[self._future_calendar_rules['root_symbol'] == root_symbol]
@@ -172,16 +174,19 @@ class FutureRootFactory(object):
                         ].value.astype(str))
 
             # Create and assign FutureContractDay dates
-            _day = None if contract_field_dict['day'] is None else contract_field_dict['day']
+            # must be integer
+            _day = None if contract_field_dict['day'] is None else int(contract_field_dict['day'][0])
+            # must be list
             _offset = None if contract_field_dict['offset'] is None else [eval(x,globs,locs) for x in contract_field_dict['offset']]
-            _observance = None if contract_field_dict['observance'] is None else [eval(x,globs,locs) for x in contract_field_dict['observation']]
+            # must be string passed into eval to create function
+            _observance = None if contract_field_dict['observance'] is None else eval(contract_field_dict['observance'][0],globs,locs)
 
             contract_day_list_dict[contract_day] = FutureContractDay(
                             root_symbol=root_symbol,
                             name=contract_day,
-                            day = _day,
-                            offset = _offset,
-                            observance = _observance,
+                            day = _day, # int
+                            offset = _offset, # list
+                            observance = _observance, # function
                             reference_dates=date_list).dates
 
             contract_rules_dict[contract_day] = contract_field_dict
