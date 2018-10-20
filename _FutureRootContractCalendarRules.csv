@@ -91,3 +91,5 @@ SP,first_trade,offset,MonthBegin(-60)
 SP,first_trade,offset,DateOffset(weekday=FR(3))
 SP,last_trade,offset,DateOffset(weekday=FR(3))
 SP,settlement_date,offset,DateOffset(weekday=FR(3))
+YT,last_trade,day,15
+,last_trade,observance,previous_exchange_day
