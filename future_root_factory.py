@@ -11,12 +11,6 @@ platform_default = 'RIC'
 
 from shogun_database.future_contract_day import FutureContractDay
 
-def eval_resolution_order(str):
-    try:
-        return eval(str,globals())
-    except NameError:
-        return eval(str,locals())
-
 class FutureRootFactory(object):
     """A future root factory is an object that creates specific futures
     instrument instances for writing into the Futures table.

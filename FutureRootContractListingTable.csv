@@ -34,7 +34,7 @@ GC,0,Q,Spot,23,M,1,FP,none
 GC,0,U,Spot,2,M,0,---,none
 GC,0,V,Spot,23,M,0,---,none
 GC,0,X,Spot,2,M,0,---,none
-GC,0,Z,Spot,72,M,1,LT-B(2),none
+GC,0,Z,Spot,72,M,1,FP,none
 QO,-1,G,Spot,24,M,1,LT-B(2),none
 QO,-1,J,Spot,24,M,1,LT-B(2),none
 QO,-1,M,Spot,24,M,1,LT-B(2),none

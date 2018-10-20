@@ -1,6 +1,51 @@
-def load_future():
+from shogun_database.future_root_factory import FutureRootFactory
 
+columns =[
+        'symbol_id',
+        'root_symbol',
+        'instrument_name',
+        'instrument_country_id',
+        'underlying_name',
+        'underlying_asset_class_id',
+        'settle_start',
+        'settle_end',
+        'settle_method',
+        'settle_timezone',
+        'final_settle_start',
+        'final_settle_end',
+        'final_settle_method',
+        'final_settle_timezone',
+        'last_trade_time'
+        'quote_currency_id',
+        'multiplier',
+        'tick_size',
+        'start_date',
+        'end_date',
+        'first_trade',
+        'last_trade',
+        'first_position',
+        'last_position',
+        'first_notice_date',
+        'last_notice_date',
+        'first_delivery_date',
+        'last_delivery_date',
+        'settlement_date',
+        'volume_switch_date',
+        'open_interest_switch_date',
+        'auto_close_date',
+        'parent_calendar_id',
+        'child_calendar_id'
+        'average_pricing',
+        'deliverable',
+        'delivery_month',
+        'delivery_year',
+]
 
+def write_future(factory,root_symbol):
+        root_chain_df = factory.make_root_chain(root_symbol)
+        root_info_dict = factory.retrieve_root_info(root_symbol)
+
+        pd.concat([pd.DataFrame.from_dict(root_info),root_chain_df],axis=1).fillna(method='ffill')
         #create ticker table by month or quarter
         #filter for those that are listed to get contract months
         #apply date rules and create dict
