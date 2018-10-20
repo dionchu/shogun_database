@@ -1,23 +1,30 @@
 import warnings
-
-import sys
-import os
-cwd = os.getcwd()
-sys.path.append(cwd + '..\custom_calendar')
-sys.path.append(cwd)
-sys.path.append(cwd + '\shogun_database')
-
 import trading_calendars
-from pandas.tseries.offsets import *
-import pandas as pd
 from datetime import date, datetime, timedelta
+import pandas as pd
+
+from .future_contract_day import FutureContractDay
 from pandas.errors import PerformanceWarning
+from pandas.tseries.offsets import *
+from pandas.tseries.holiday import (
+    DateOffset,
+    MO,
+    TU,
+    WE,
+    TH,
+    FR,
+    SA,
+    SU,
+)
+
+
 start_default = pd.Timestamp('1990-01-01', tz='UTC')
 end_base = pd.Timestamp('today', tz='UTC')
 end_default = end_base + pd.Timedelta(days=31)
 platform_default = 'RIC'
-from shogun_database.future_contract_day import FutureContractDay
 
+import os
+dirname = os.path.dirname(__file__)
 
 class FutureRootFactory(object):
     """A future root factory is an object that creates specific futures
@@ -35,24 +42,16 @@ class FutureRootFactory(object):
     """
     ## what happens if there are duplicate roots?
     def __init__(self):
-#        self._country_code = pd.read_csv(".\shogun_database\_CountryCode.csv", keep_default_na=False)
-#        self._asset_class = pd.read_csv(".\shogun_database\_AssetClass.csv")
-#        self._currency_code = pd.read_csv(".\shogun_database\_CurrencyCode.csv")
-#        self._exchange_code = pd.read_csv(".\shogun_database\_ExchangeCode.csv")
-#        self._financial_center = pd.read_csv(".\shogun_database\_FinancialCenter.csv")
-#        self._future_contract_listing = pd.read_csv(".\shogun_database\_FutureRootContractListingTable.csv")
-#        self._future_root = pd.read_csv(".\shogun_database\_FutureRootTable.csv")
-#        self._platform_symbol_mapping = pd.read_csv(".\shogun_database\_PlatformSymbolMapping.csv")
-#        self._future_calendar_rules = pd.read_csv(".\shogun_database\_FutureRootContractCalendarRules.csv")
-        self._country_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_CountryCode.csv", keep_default_na=False)
-        self._asset_class = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_AssetClass.csv")
-        self._currency_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_CurrencyCode.csv")
-        self._exchange_code = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_ExchangeCode.csv")
-        self._financial_center = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FinancialCenter.csv")
-        self._future_contract_listing = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootContractListingTable.csv")
-        self._future_root = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootTable.csv")
-        self._platform_symbol_mapping = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_PlatformSymbolMapping.csv")
-        self._future_calendar_rules = pd.read_csv("/Users/orthogonal/Documents/Python Scripts/shogun/shogun/shogun_database/_FutureRootContractCalendarRules.csv")
+
+        self._country_code = pd.read_csv(dirname + "\_CountryCode.csv", keep_default_na=False)
+        self._asset_class = pd.read_csv(dirname + "\_AssetClass.csv")
+        self._currency_code = pd.read_csv(dirname + "\_CurrencyCode.csv")
+        self._exchange_code = pd.read_csv(dirname + "\_ExchangeCode.csv")
+        self._financial_center = pd.read_csv(dirname + "\_FinancialCenter.csv")
+        self._future_contract_listing = pd.read_csv(dirname + "\_FutureRootContractListingTable.csv")
+        self._future_root = pd.read_csv(dirname + "\_FutureRootTable.csv")
+        self._platform_symbol_mapping = pd.read_csv(dirname + "\_PlatformSymbolMapping.csv")
+        self._future_calendar_rules = pd.read_csv(dirname + "\_FutureRootContractCalendarRules.csv")
 
         self._root_cache = {}
 
@@ -179,7 +178,7 @@ class FutureRootFactory(object):
             # must be list
             _offset = None if contract_field_dict['offset'] is None else [eval(x,globs,locs) for x in contract_field_dict['offset']]
             # must be string passed into eval to create function
-            _observance = None if contract_field_dict['observance'] is None else eval(contract_field_dict['observance'][0],globs,locs)
+            _observance = None if len(contract_field_dict['observance']) is 0 else eval(contract_field_dict['observance'][0],globs,locs)
 
             contract_day_list_dict[contract_day] = FutureContractDay(
                             root_symbol=root_symbol,
