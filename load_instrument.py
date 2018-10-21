@@ -5,10 +5,17 @@ import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
 from .future_root_factory import FutureRootFactory
 
+from pandas import read_hdf
+from pandas import HDFStore,DataFrame
+
 import os
 dirname = os.path.dirname(__file__)
 
 #run through loop to get data for all, keeping in mind 5 year limit to history
+def put_to_hdf(df):
+    hdf = HDFStore(dirname + "\_InstrumentData.5")
+    hdf.put('InstrumentData', df, format='table', data_columns=True)
+    hdf.close() # closes the file
 
 columns =[
         'exchange_symbol',
@@ -52,6 +59,47 @@ columns =[
 
 future_instrument_df = pd.DataFrame(columns = columns)
 
+def get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date,end_date):
+    """
+    Fetch daily open, high, low close, open interest data for "platform_symbol".
+    """
+    assert type(start_date) is str, "start_date is not a string: %r" % start_date
+    assert type(end_date) is str, "start_date is not a string: %r" % end_date
+
+    try:
+        tmp_ohlcv = ek.get_timeseries(eikon_symbol,["open","high","low","close","volume"],start_date=str(start_date), end_date=str(end_date))
+    except ek.EikonError:
+        return pd.DataFrame()
+    tmp_ohlcv.insert(0,'exchange_symbol',exchange_symbol)
+    e = ek.get_data(eikon_symbol, ['TR.OPENINTEREST.Date', 'TR.OPENINTEREST'], {'SDate':str(start_date),'EDate':str(end_date)})
+    tmp_oi = pd.DataFrame({'open_interest': e[0]['Open Interest'].values}, index = pd.to_datetime(e[0]['Date'].values))
+    tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True)
+    return tmp
+
+def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_date):
+    """
+    Fetch daily data for "platform_symbol". Eikon API limits one-time retrievals,
+    therefore we retrieve the data in 5 year batches.
+    """
+    assert type(start_date) is str, "start_date is not a string: %r" % start_date
+    assert type(end_date) is str, "start_date is not a string: %r" % end_date
+
+    data_df = pd.DataFrame()
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    counter = 0
+
+    while int((end_date - start_date).days) > 1827:
+        temp_end_date = start_date + pd.DateOffset(years=5)
+        tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),temp_end_date.strftime("%Y-%m-%d"))
+        data_df = data_df.append(tmp)
+        counter += 1
+        start_date = temp_end_date
+
+    tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),end_date.strftime("%Y-%m-%d"))
+    return data_df.append(tmp)
+
+
 def write_future(factory,root_symbol):
         """
         write new future instruments to table.
@@ -71,28 +119,27 @@ def write_future(factory,root_symbol):
             exchange_symbol = root_chain_dict['exchange_symbol'][platform_symbol]
             start = root_chain_dict['first_trade'][platform_symbol].strftime("%Y-%m-%d")
             end = root_chain_dict['last_trade'][platform_symbol].strftime("%Y-%m-%d")
-            tmp_ohlcv = ek.get_timeseries(platform_symbol,["open","high","low","close","volume"],start_date=start, end_date=end)
-            tmp_ohlcv.insert(0,'exchange_symbol',exchange_symbol)
-            e = ek.get_data(platform_symbol, ['TR.OPENINTEREST.Date', 'TR.OPENINTEREST'], {'SDate':start,'EDate':end})
-            tmp_oi = pd.DataFrame({'open_interest': e[0]['Open Interest'].values}, index = pd.to_datetime(e[0]['Date'].values))
-            tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True)
+            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
             data_df = data_df.append(tmp)
 
         # Change default column names to lower case
         data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
-        # Insert Date column
-        data_df.insert(0,'date',data_df.index)
 
-        # If exists, append data, otherwise write new
-        if os.path.isfile(dirname + "\_InstrumentData.csv"):
-            with open(dirname + "\_InstrumentData.csv", 'a') as f:
-                     data_df.to_csv(f, header=False)
-        else:
-            data_df.to_csv(dirname + "\_InstrumentData.csv")
+        data_df.index.name = 'date'
+        data_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
+        # Append data to hdf, remove duplicates, and write to both hdf and csv
+            instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
+            instrument_data_hdf = instrument_data_hdf.append(data_df,sort=False).drop_duplicates()
+            instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
+               format='table', data_columns=True)
+            instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
 
         # Combine futures instrument information and calculated dates
         root_info_and_chain = pd.concat([pd.DataFrame.from_dict(root_info_dict),root_chain_df],axis=1).fillna(method='ffill')
+
+        # Reset index to columns
+        data_df.reset_index(level=[0,1], inplace=True)
 
         # Calculate start and end dates
         start_end_df = pd.DataFrame(
@@ -104,18 +151,26 @@ def write_future(factory,root_symbol):
         metadata_df = pd.concat([future_instrument_df,root_info_and_chain], join = "inner")
         metadata_df = pd.merge(metadata_df,start_end_df, on='exchange_symbol')
         metadata_df = pd.concat([future_instrument_df,metadata_df], sort=False)
+        metadata_df['delivery_month'] = metadata_df['delivery_month'].astype(str).astype(int)
+        metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(int)
+
+        metadata_df.set_index(['exchange_symbol'], append=True, inplace=True)
+
+        # Append data to hdf, remove duplicates, and write to both hdf and csv
+            future_instrument_hdf = read_hdf(dirname +'\_FutureInstrument.h5')
+            future_instrument_hdf = future_instrument_hdf.append(metadata_df,sort=False).drop_duplicates()
+            future_instrument_hdf.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
+               format='table', data_columns=True)
+            future_instrument_hdf.to_csv(dirname + "\_FutureInstrument.csv")
 
         # If exists, append data, otherwise write new
         if os.path.isfile(dirname + "\_FutureInstrument.csv"):
             with open(dirname + "\_FutureInstrument.csv", 'a') as f:
-                     metadata_df.to_csv(f, header=False)
+                     metadata_df.to_csv(f, index = False, header=False)
         else:
-            metadata_df.to_csv(dirname + "\_FutureInstrument.csv")
+            metadata_df.to_csv(dirname + "\_FutureInstrument.csv", index = False)
 
         return data_df
-        #run through loop to get data for all, keeping in mind 5 year limit to history
-        #write or append to csv
-        #this concludes the write + load function
 
         #update function
         #one for us, one for eu, one for asia, or separated by exchange close times

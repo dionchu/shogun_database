@@ -42,7 +42,6 @@ class FutureRootFactory(object):
     """
     ## what happens if there are duplicate roots?
     def __init__(self):
-
         self._country_code = pd.read_csv(dirname + "\_CountryCode.csv", keep_default_na=False)
         self._asset_class = pd.read_csv(dirname + "\_AssetClass.csv")
         self._currency_code = pd.read_csv(dirname + "\_CurrencyCode.csv")
@@ -165,20 +164,18 @@ class FutureRootFactory(object):
             contract_field_list = list(contract_rules.field.unique())
 
             # Extract rules
-            contract_field_dict = {'day': None, 'offset': None, 'observance': None}
+
             for contract_field in contract_field_list:
-                        contract_field_dict[contract_field] = list(
+                    contract_field_dict = {'day': None, 'offset': None, 'observance': None}
+                    contract_field_dict[contract_field] = list(
                         contract_rules[(contract_rules['contract_day'] == contract_day) &
                         (contract_rules['field'] == contract_field)
                         ].value.astype(str))
 
             # Create and assign FutureContractDay dates
-            # must be integer
             _day = None if contract_field_dict['day'] is None else int(contract_field_dict['day'][0])
-            # must be list
             _offset = None if contract_field_dict['offset'] is None else [eval(x,globs,locs) for x in contract_field_dict['offset']]
-            # must be string passed into eval to create function
-            _observance = None if len(contract_field_dict['observance']) is 0 else eval(contract_field_dict['observance'][0],globs,locs)
+            _observance = None if contract_field_dict['observance'] is None else eval(contract_field_dict['observance'][0],globs,locs)
 
             contract_day_list_dict[contract_day] = FutureContractDay(
                             root_symbol=root_symbol,
