@@ -49,7 +49,7 @@ columns =[
         'volume_switch_date',
         'open_interest_switch_date',
         'auto_close_date',
-        'exchange_info',
+        'exchange_id',
         'parent_calendar_id',
         'child_calendar_id',
         'average_pricing',
