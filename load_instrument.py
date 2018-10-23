@@ -49,6 +49,7 @@ columns =[
         'volume_switch_date',
         'open_interest_switch_date',
         'auto_close_date',
+        'exchange_info',
         'parent_calendar_id',
         'child_calendar_id',
         'average_pricing',
@@ -156,21 +157,43 @@ def write_future(factory,root_symbol):
 
         metadata_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
+        # Assumes that hdf exists
         # Append data to hdf, remove duplicates, and write to both hdf and csv
+        if os.path.isfile(dirname + "\_FutureInstrument.h5"):
             future_instrument_hdf = read_hdf(dirname +'\_FutureInstrument.h5')
             future_instrument_hdf = future_instrument_hdf.append(metadata_df,sort=False).drop_duplicates()
             future_instrument_hdf.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
                format='table', data_columns=True)
             future_instrument_hdf.to_csv(dirname + "\_FutureInstrument.csv")
-
-        # If exists, append data, otherwise write new
-        if os.path.isfile(dirname + "\_FutureInstrument.csv"):
-            with open(dirname + "\_FutureInstrument.csv", 'a') as f:
-                     metadata_df.to_csv(f, index = False, header=False)
         else:
-            metadata_df.to_csv(dirname + "\_FutureInstrument.csv", index = False)
+            metadata_df.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
+               format='table', data_columns=True)
+            metadata_df.to_csv(dirname + "\_FutureInstrument.csv")
+
+
+        # Assumes that hdf exists
+        # Assign instrument routing information to table
+        instrument_router_df = pd.DataFrame({'instrument_type': ['Future']}, index=metadata_df.index)
+
+        if os.path.isfile(dirname + "\_InstrumentRouter.h5"):
+            instrument_router_hdf = read_hdf(dirname +'\_InstrumentRouter.h5')
+            instrument_router_hdf = instrument_router_hdf.append(instrument_router_df,sort=False).drop_duplicates()
+            instrument_router_hdf.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
+               format='table', data_columns=True)
+            instrument_router_hdf.to_csv(dirname + "\_InstrumentRouter.csv")
+        else:
+            instrument_router_df.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
+               format='table', data_columns=True)
+            instrument_router_df.to_csv(dirname + "\_InstrumentRouter.csv")
 
         return data_df
+
+#        if os.path.isfile(dirname + "\_FutureInstrument.csv"):
+#            with open(dirname + "\_FutureInstrument.csv", 'a') as f:
+#                     metadata_df.to_csv(f, index = False, header=False)
+#        else:
+#            metadata_df.to_csv(dirname + "\_FutureInstrument.csv", index = False)
+
 
         #update function
         #one for us, one for eu, one for asia, or separated by exchange close times

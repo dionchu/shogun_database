@@ -1,4 +1,4 @@
-root_id,last_trade_offset,delivery_month,reference_month,reference_month_offset,reference_month_offset_interval,active,active_roll_rule,first_trade
+root_symbol,last_trade_offset,delivery_month,reference_month,reference_month_offset,reference_month_offset_interval,active,active_roll_rule,first_trade
 HG,0,F,Spot,23,M,0,---,none
 HG,0,G,Spot,23,M,0,---,none
 HG,0,H,Spot,60,M,1,FP,none

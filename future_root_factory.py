@@ -32,7 +32,7 @@ class FutureRootFactory(object):
 
     Parameters
     ----------
-    root_id : str or None
+    root_symbol : str or None
         The future root id, for example 'ZN' or 'ES'.
     canonical_name : str
         The canonical name of the exchange, for example 'XNYS' or 'XASX'. If
@@ -87,7 +87,7 @@ class FutureRootFactory(object):
                 ].set_index('exchange_symbol').to_dict()['platform_symbol'][root_symbol]
 
         root_contract_df = self._future_contract_listing[
-                (self._future_contract_listing['root_id'] == root_symbol)
+                (self._future_contract_listing['root_symbol'] == root_symbol)
                 ]
 
         listed_contracts = list(root_contract_df['delivery_month'])
